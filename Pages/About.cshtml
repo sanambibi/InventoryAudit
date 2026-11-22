@@ -1,0 +1,52 @@
+@page
+@{ ViewData["Title"] = "How it works"; }
+
+<div class="page-head">
+    <div>
+        <h1>How it works</h1>
+        <p class="muted">Where each part of the audit lives in the code.</p>
+    </div>
+</div>
+
+<div class="grid-3">
+    <article class="card">
+        <h2>Product class</h2>
+        <p>Stores the product name, product id and a <code>double[]</code> of historical prices.</p>
+        <small class="muted">Models/Product.cs</small>
+    </article>
+    <article class="card">
+        <h2>Title clean-up</h2>
+        <p><code>Trim()</code> removes edge spaces, <code>Split()</code> and <code>Join()</code> remove double spaces, <code>ToLowerInvariant()</code> and <code>ToTitleCase()</code> fix the casing.</p>
+        <small class="muted">Services/TitleSanitizer.cs</small>
+    </article>
+    <article class="card">
+        <h2>Price calculation</h2>
+        <p>Loops over the array to find the maximum, minimum and average price.</p>
+        <small class="muted">Services/PriceCalculator.cs</small>
+    </article>
+    <article class="card">
+        <h2>Price parsing</h2>
+        <p>Turns text into numbers inside <code>try / catch</code>. Text like <i>abc</i> throws a clear <code>InvalidPriceException</code>.</p>
+        <small class="muted">Services/PriceParser.cs</small>
+    </article>
+    <article class="card">
+        <h2>Custom exceptions</h2>
+        <p><code>InvalidProductException</code>, <code>DuplicateProductException</code> and <code>InvalidPriceException</code> carry messages written for the person entering data.</p>
+        <small class="muted">Exceptions/</small>
+    </article>
+    <article class="card">
+        <h2>Audit that never crashes</h2>
+        <p>The batch audit wraps every line in its own <code>try / catch</code>, so one bad line is reported and the rest still run.</p>
+        <small class="muted">Services/AuditService.cs</small>
+    </article>
+</div>
+
+<section class="card">
+    <h2>Price rules</h2>
+    <ul class="plain-list tight">
+        <li><span>Prices must be numbers: <code>19.99</code>. Do not use thousand separators (a comma splits the list).</span></li>
+        <li><span>Negative, zero, NaN, Infinity and values above 1,000,000 are rejected.</span></li>
+        <li><span>A leading <code>$</code> is allowed and ignored.</span></li>
+        <li><span>Data is kept in memory. Restarting the app restores the sample products.</span></li>
+    </ul>
+</section>

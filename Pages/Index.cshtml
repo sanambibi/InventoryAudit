@@ -1,0 +1,106 @@
+@page
+@model IndexModel
+@{ ViewData["Title"] = "Dashboard"; }
+
+<section class="hero">
+    <div class="hero-copy">
+        <h1>Messy entries in.<br />Audited stock out.</h1>
+        <p class="lead">StockLedger tidies product names, rejects broken prices and shows the price story of every item in your shop.</p>
+        <div class="actions">
+            <a class="btn" asp-page="/Products/Create">Add a product</a>
+            <a class="btn btn-ghost" asp-page="/Audit">Run a batch audit</a>
+        </div>
+    </div>
+
+    <div class="scanner" aria-label="Live demo of the title clean-up">
+        <div class="scan-row">
+            <span class="scan-label">Typed at the counter</span>
+            <code class="scan-raw" id="scanRaw"></code>
+        </div>
+        <div class="scan-beam"></div>
+        <div class="scan-row">
+            <span class="scan-label">Saved in the ledger</span>
+            <strong class="scan-clean" id="scanClean"></strong>
+        </div>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stat"><span class="stat-num" data-count="@Model.TotalProducts">0</span><span class="stat-label">products tracked</span></div>
+    <div class="stat"><span class="stat-num" data-count="@Model.TotalPricePoints">0</span><span class="stat-label">historical prices</span></div>
+    <div class="stat"><span class="stat-num" data-count="@Fmt.Plain(Model.AverageOfAverages)" data-decimals="2" data-prefix="$">$0</span><span class="stat-label">average product price</span></div>
+    <div class="stat">
+        <span class="stat-num small">@(Model.MostExpensive?.Product.Name ?? "-")</span>
+        <span class="stat-label">highest price ever: @(Model.MostExpensive is null ? "-" : Fmt.Money(Model.MostExpensive.Stats.Max))</span>
+    </div>
+</section>
+
+<section class="two-col">
+    <div class="card">
+        <h2>Most unstable prices</h2>
+        <p class="muted">Price range compared with the average. A high number means the price keeps jumping.</p>
+        <ul class="bars">
+            @foreach (var s in Model.BiggestSwings)
+            {
+                var pct = s.Stats.Average == 0 ? 0 : s.Stats.Range / s.Stats.Average * 100;
+                <li>
+                    <a asp-page="/Products/Details" asp-route-id="@s.Product.ProductId">@s.Product.Name</a>
+                    <div class="bar"><i style="--w:@Fmt.Plain(Math.Round(Math.Min(100, pct * 2)))%"></i></div>
+                    <span class="bar-val">@Fmt.Plain(Math.Round(pct, 1))%</span>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Latest products</h2>
+        <ul class="plain-list">
+            @foreach (var s in Model.Recent)
+            {
+                <li>
+                    <a asp-page="/Products/Details" asp-route-id="@s.Product.ProductId">
+                        <b>@s.Product.Name</b>
+                        <small class="muted">@s.Product.Sku</small>
+                    </a>
+                    <span class="tnum">@Fmt.Money(s.Stats.Latest)</span>
+                </li>
+            }
+        </ul>
+        <a class="link" asp-page="/Products/Index">See all products</a>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Hero demo: messy text gets typed, then cleaned.
+        (function () {
+            const pairs = [
+                ["   wireless   MOUSE pro  ", "Wireless Mouse Pro"],
+                ["usb-c    CHARGER   65w", "USB-C Charger 65w"],
+                ["  led   DESK lamp ", "LED Desk Lamp"],
+                ["SMART    watch   series 5", "Smart Watch Series 5"]
+            ];
+            const raw = document.getElementById('scanRaw');
+            const clean = document.getElementById('scanClean');
+            const beam = document.querySelector('.scan-beam');
+            const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (still) { raw.textContent = '[' + pairs[0][0] + ']'; clean.textContent = pairs[0][1]; return; }
+            let i = 0;
+            const wait = ms => new Promise(r => setTimeout(r, ms));
+            async function loop() {
+                while (true) {
+                    const [r, c] = pairs[i % pairs.length];
+                    raw.textContent = ''; clean.textContent = ''; clean.classList.remove('on');
+                    for (let k = 1; k <= r.length; k++) { raw.textContent = '[' + r.slice(0, k) + ']'; await wait(45); }
+                    await wait(350);
+                    beam.classList.remove('go'); void beam.offsetWidth; beam.classList.add('go');
+                    await wait(450);
+                    clean.textContent = c; clean.classList.add('on');
+                    await wait(2200);
+                    i++;
+                }
+            }
+            loop();
+        })();
+    </script>
+}

@@ -1,0 +1,77 @@
+@page
+@model AuditModel
+@{ ViewData["Title"] = "Batch audit"; }
+
+<div class="page-head">
+    <div>
+        <h1>Batch audit</h1>
+        <p class="muted">Paste many entries at once. One per line: <code>Product name | price, price, price</code></p>
+    </div>
+</div>
+
+<form method="post" class="card form">
+    <label for="batch">Raw entries</label>
+    <textarea id="batch" name="Batch" rows="11" spellcheck="false" class="code-area">@Model.Batch</textarea>
+
+    <label class="check">
+        <input type="checkbox" name="Commit" value="true" checked="@Model.Commit" />
+        <span>Add the accepted products to the inventory</span>
+    </label>
+    <button class="btn" type="submit">Run audit</button>
+</form>
+
+@if (Model.Report is { } report)
+{
+    <section class="stats" id="result">
+        <div class="stat"><span class="stat-num" data-count="@report.Entries.Count">0</span><span class="stat-label">lines checked</span></div>
+        <div class="stat good"><span class="stat-num" data-count="@report.Accepted">0</span><span class="stat-label">accepted</span></div>
+        <div class="stat badstat"><span class="stat-num" data-count="@report.Rejected">0</span><span class="stat-label">rejected with a reason</span></div>
+        <div class="stat"><span class="stat-num" data-count="@report.Committed">0</span><span class="stat-label">saved to inventory</span></div>
+    </section>
+
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr><th>Line</th><th>Result</th><th>Clean name</th><th class="num">Min</th><th class="num">Max</th><th class="num">Average</th></tr>
+            </thead>
+            <tbody>
+            @{ int row = 0; }
+            @foreach (var e in report.Entries)
+            {
+                string rawLine = string.IsNullOrEmpty(e.RawPrices) ? e.RawName : e.RawName + " | " + e.RawPrices;
+                <tr class="row-in @(e.Success ? "" : "row-bad")" style="--d:@(row++ * 60)ms">
+                    <td>@e.LineNo</td>
+                    @if (e.Success)
+                    {
+                        <td>
+                            <span class="pill up">@(e.Committed ? "Saved" : "Valid")</span>
+                        </td>
+                        <td>
+                            <b>@e.CleanName</b>
+                            <small class="muted block ws">from [@e.RawName]</small>
+                        </td>
+                        <td class="num tnum">@Fmt.Money(e.Stats!.Min)</td>
+                        <td class="num tnum">@Fmt.Money(e.Stats!.Max)</td>
+                        <td class="num tnum">@Fmt.Money(e.Stats!.Average)</td>
+                    }
+                    else
+                    {
+                        <td><span class="pill down">@e.ErrorType</span></td>
+                        <td colspan="4">
+                            <span class="err-text">@e.Error</span>
+                            <small class="muted block ws">line: [@rawLine]</small>
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    @if (Model.Report is not null)
+    {
+        <script>document.getElementById('result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });</script>
+    }
+}

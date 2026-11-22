@@ -1,0 +1,63 @@
+@page
+@model InventoryAudit.Pages.Products.IndexModel
+@{ ViewData["Title"] = "Products"; }
+
+<div class="page-head">
+    <div>
+        <h1>Products</h1>
+        <p class="muted">@Model.Items.Count item(s) with their price history.</p>
+    </div>
+    <form method="get" class="search">
+        <input type="search" name="q" value="@Model.Q" placeholder="Search by name or SKU" aria-label="Search products" />
+        <button class="btn" type="submit">Search</button>
+    </form>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert ok">@Model.Message</div>
+}
+
+@if (Model.Items.Count == 0)
+{
+    <div class="card center-card">
+        <h2>No products found</h2>
+        <p class="muted">Try another search, or add a product to start tracking prices.</p>
+        <a class="btn" asp-page="/Products/Create">Add a product</a>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th><th class="num">Lowest</th><th class="num">Highest</th>
+                    <th class="num">Average</th><th class="num">Latest</th><th class="num">Trend</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @{ int row = 0; }
+            @foreach (var s in Model.Items)
+            {
+                <tr class="row-in" style="--d:@(row++ * 55)ms">
+                    <td>
+                        <a class="strong" asp-page="/Products/Details" asp-route-id="@s.Product.ProductId">@s.Product.Name</a>
+                        <small class="muted block">@s.Product.Sku - @s.Stats.Count prices</small>
+                    </td>
+                    <td class="num tnum">@Fmt.Money(s.Stats.Min)</td>
+                    <td class="num tnum">@Fmt.Money(s.Stats.Max)</td>
+                    <td class="num tnum">@Fmt.Money(s.Stats.Average)</td>
+                    <td class="num tnum">@Fmt.Money(s.Stats.Latest)</td>
+                    <td class="num"><span class="pill @(s.Stats.TrendPercent >= 0 ? "up" : "down")">@Fmt.Percent(s.Stats.TrendPercent)</span></td>
+                    <td class="num">
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@s.Product.ProductId" data-confirm="Remove @s.Product.Name from the inventory?">
+                            <button class="btn-link danger" type="submit">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

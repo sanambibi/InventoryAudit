@@ -1,0 +1,70 @@
+@page "{id:int}"
+@model InventoryAudit.Pages.Products.DetailsModel
+@{ ViewData["Title"] = Model.Product.Name; }
+
+<div class="page-head">
+    <div>
+        <a class="link" asp-page="/Products/Index">All products</a>
+        <h1>@Model.Product.Name</h1>
+        <p class="muted">@Model.Product.Sku - @Model.Stats.Count recorded prices</p>
+    </div>
+    <span class="pill big @(Model.Stats.TrendPercent >= 0 ? "up" : "down")">@Fmt.Percent(Model.Stats.TrendPercent) since first price</span>
+</div>
+
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert ok">@ok</div>
+}
+
+<section class="stats">
+    <div class="stat"><span class="stat-num" data-count="@Fmt.Plain(Model.Stats.Min)" data-decimals="2" data-prefix="$">$0</span><span class="stat-label">minimum price</span></div>
+    <div class="stat"><span class="stat-num" data-count="@Fmt.Plain(Model.Stats.Max)" data-decimals="2" data-prefix="$">$0</span><span class="stat-label">maximum price</span></div>
+    <div class="stat"><span class="stat-num" data-count="@Fmt.Plain(Model.Stats.Average)" data-decimals="2" data-prefix="$">$0</span><span class="stat-label">average price</span></div>
+    <div class="stat"><span class="stat-num" data-count="@Fmt.Plain(Model.Stats.Latest)" data-decimals="2" data-prefix="$">$0</span><span class="stat-label">latest price</span></div>
+</section>
+
+<section class="card">
+    <h2>Price history</h2>
+    <svg class="chart" viewBox="0 0 @InventoryAudit.Pages.Products.DetailsModel.ChartWidth @InventoryAudit.Pages.Products.DetailsModel.ChartHeight" role="img" aria-label="Line chart of historical prices">
+        <defs>
+            <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="var(--accent)" stop-opacity=".35" />
+                <stop offset="1" stop-color="var(--accent)" stop-opacity="0" />
+            </linearGradient>
+        </defs>
+        <polygon points="@Model.Area" fill="url(#fill)" class="chart-area" />
+        <polyline points="@Model.Line" class="chart-line" pathLength="1" />
+        @foreach (var d in Model.Dots)
+        {
+            <circle cx="@d.X" cy="@d.Y" r="5" class="chart-dot"><title>@d.Label</title></circle>
+        }
+    </svg>
+</section>
+
+<section class="card">
+    <h2>All prices</h2>
+    <div class="table-wrap">
+        <table class="table">
+            <thead><tr><th>#</th><th class="num">Price</th><th class="num">Change</th><th>Note</th></tr></thead>
+            <tbody>
+            @for (int i = 0; i < Model.Product.HistoricalPrices.Length; i++)
+            {
+                double price = Model.Product.HistoricalPrices[i];
+                double? change = i == 0 ? null : (price - Model.Product.HistoricalPrices[i - 1]) / Model.Product.HistoricalPrices[i - 1] * 100;
+                <tr class="row-in" style="--d:@(i * 45)ms">
+                    <td>@(i + 1)</td>
+                    <td class="num tnum">@Fmt.Money(price)</td>
+                    <td class="num">
+                        @if (change is null) { <span class="muted">-</span> }
+                        else { <span class="pill @(change >= 0 ? "up" : "down")">@Fmt.Percent(change.Value)</span> }
+                    </td>
+                    <td>
+                        @if (price == Model.Stats.Max) { <span class="tag">highest</span> }
+                        @if (price == Model.Stats.Min) { <span class="tag">lowest</span> }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

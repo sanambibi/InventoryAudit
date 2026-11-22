@@ -1,0 +1,60 @@
+@page
+@model InventoryAudit.Pages.Products.CreateModel
+@{ ViewData["Title"] = "Add product"; }
+
+<div class="page-head">
+    <div>
+        <h1>Add a product</h1>
+        <p class="muted">Type it the messy way. The name is cleaned and every price is checked before saving.</p>
+    </div>
+</div>
+
+<div class="two-col wide-left">
+    <form method="post" class="card form" novalidate>
+        @if (Model.ErrorText is not null)
+        {
+            <div class="alert bad" role="alert"><b>@Model.ErrorTitle</b><span>@Model.ErrorText</span></div>
+        }
+
+        <label for="name">Product name</label>
+        <input id="name" name="Name" value="@Model.Name" placeholder="  wireless   MOUSE pro" autocomplete="off" />
+        <div class="preview"><span class="muted">Will be saved as</span> <strong id="namePreview">-</strong></div>
+
+        <label for="prices">Historical prices</label>
+        <textarea id="prices" name="Prices" rows="4" placeholder="24.99, 22.50, 26.00, 25.75">@Model.Prices</textarea>
+        <small class="muted">Separate prices with commas, semicolons or new lines. Oldest price first.</small>
+
+        <button class="btn" type="submit">Save product</button>
+    </form>
+
+    <aside class="card">
+        <h2>What gets rejected</h2>
+        <ul class="plain-list tight">
+            <li><span>Empty or one-character names</span></li>
+            <li><span>Names with no letters, like 12345</span></li>
+            <li><span>Text in the price list, like abc</span></li>
+            <li><span>Negative or zero prices</span></li>
+            <li><span>Prices above 1,000,000</span></li>
+            <li><span>Names already in the inventory</span></li>
+        </ul>
+        <p class="muted">Each case shows a clear message instead of crashing the app.</p>
+    </aside>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const acr = ['LED','USB','HDMI','RGB','SSD','HDD','TV','HD','UHD','LCD','GPS','RAM','CPU','GPU','LTE','NFC','UV','WIFI','DVD'];
+            const input = document.getElementById('name');
+            const out = document.getElementById('namePreview');
+            function clean(s) {
+                const t = s.trim().split(/\s+/).filter(Boolean).join(' ').toLowerCase();
+                return t.replace(/(^|[\s\-])\S/g, c => c.toUpperCase())
+                        .replace(/[A-Za-z]+/g, w => acr.includes(w.toUpperCase()) ? w.toUpperCase() : w);
+            }
+            function update() { out.textContent = clean(input.value) || '-'; }
+            input.addEventListener('input', update);
+            update();
+        })();
+    </script>
+}

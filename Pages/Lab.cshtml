@@ -1,0 +1,65 @@
+@page
+@model LabModel
+@{ ViewData["Title"] = "Clean-up lab"; }
+
+<div class="page-head">
+    <div>
+        <h1>Clean-up lab</h1>
+        <p class="muted">Try the two checks on their own: the title sanitizer and the price calculator.</p>
+    </div>
+</div>
+
+<div class="two-col">
+    <section class="card">
+        <h2>Title sanitizer</h2>
+        <form method="post" asp-page-handler="Title" class="form">
+            <label for="rawTitle">Messy product title</label>
+            <input id="rawTitle" name="RawTitle" value="@Model.RawTitle" autocomplete="off" spellcheck="false" />
+            <button class="btn" type="submit">Clean title</button>
+        </form>
+
+        @if (Model.TitleError is not null)
+        {
+            <div class="alert bad" role="alert"><b>Rejected</b><span>@Model.TitleError</span></div>
+        }
+
+        @if (Model.Steps is not null)
+        {
+            <ol class="steps">
+                @for (int i = 0; i < Model.Steps.Count; i++)
+                {
+                    var step = Model.Steps[i];
+                    <li class="row-in @(i == Model.Steps.Count - 1 ? "final" : "")" style="--d:@(i * 120)ms">
+                        <small class="muted">@step.Method</small>
+                        <code class="ws">[@step.Value]</code>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+
+    <section class="card">
+        <h2>Price calculator</h2>
+        <form method="post" asp-page-handler="Prices" class="form">
+            <label for="rawPrices">Historical prices</label>
+            <textarea id="rawPrices" name="RawPrices" rows="3" spellcheck="false">@Model.RawPrices</textarea>
+            <small class="muted">Try adding abc, -5 or 0 to see the errors.</small>
+            <button class="btn" type="submit">Calculate</button>
+        </form>
+
+        @if (Model.PriceError is not null)
+        {
+            <div class="alert bad" role="alert"><b>Rejected</b><span>@Model.PriceError</span></div>
+        }
+
+        @if (Model.Stats is { } s && Model.Parsed is not null)
+        {
+            <p class="muted">Parsed array: <code>double[@(Model.Parsed.Length)] { @(string.Join(", ", Model.Parsed.Select(v => Fmt.Plain(v)))) }</code></p>
+            <div class="mini-stats">
+                <div class="row-in" style="--d:0ms"><small class="muted">Minimum</small><b class="tnum">@Fmt.Money(s.Min)</b></div>
+                <div class="row-in" style="--d:120ms"><small class="muted">Maximum</small><b class="tnum">@Fmt.Money(s.Max)</b></div>
+                <div class="row-in" style="--d:240ms"><small class="muted">Average</small><b class="tnum">@Fmt.Money(s.Average)</b></div>
+            </div>
+        }
+    </section>
+</div>

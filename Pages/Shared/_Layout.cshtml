@@ -1,0 +1,47 @@
+@{
+    var current = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    string Active(string p) => current == p || (p == "/Products/Index" && current == "/Products/Details") ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - StockLedger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script>try{var t=localStorage.getItem('stockledger-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+    <div class="orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <header class="nav">
+        <a class="brand" asp-page="/Index"><i class="brand-mark"></i>StockLedger</a>
+        <nav class="links" aria-label="Main">
+            <a class="@Active("/Index")" asp-page="/Index">Dashboard</a>
+            <a class="@Active("/Products/Index")" asp-page="/Products/Index">Products</a>
+            <a class="@Active("/Products/Create")" asp-page="/Products/Create">Add product</a>
+            <a class="@Active("/Audit")" asp-page="/Audit">Batch audit</a>
+            <a class="@Active("/Lab")" asp-page="/Lab">Clean-up lab</a>
+            <a class="@Active("/About")" asp-page="/About">How it works</a>
+        </nav>
+        <div class="themes" role="group" aria-label="Colour theme">
+            <button type="button" class="dot" data-set-theme="midnight" title="Midnight blue" aria-label="Midnight blue theme"></button>
+            <button type="button" class="dot" data-set-theme="violet" title="Violet night" aria-label="Violet theme"></button>
+            <button type="button" class="dot" data-set-theme="emerald" title="Emerald dark" aria-label="Emerald theme"></button>
+            <button type="button" class="dot" data-set-theme="crimson" title="Crimson dark" aria-label="Crimson theme"></button>
+        </div>
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">StockLedger - smart inventory and price auditing - built with ASP.NET Core on .NET 10</footer>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
